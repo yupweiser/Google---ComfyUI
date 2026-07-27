@@ -32,9 +32,9 @@ COPY . .
 
 # Clone required custom nodes so they are baked into the container
 WORKDIR /app/custom_nodes
-RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git \
- && git clone https://github.com/Kosinkadink/ComfyUI-GGUF.git \
- && git clone https://github.com/kijai/ComfyUI-KJNodes.git
+RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git ./ComfyUI-Manager
+RUN git clone https://github.com/Kosinkadink/ComfyUI-GGUF.git ./ComfyUI-GGUF
+RUN git clone https://github.com/kijai/ComfyUI-KJNodes.git ./ComfyUI-KJNodes
 
 # Return to root app directory
 WORKDIR /app
