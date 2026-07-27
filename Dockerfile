@@ -32,7 +32,6 @@ WORKDIR /app/custom_nodes
 
 RUN git clone https://github.com/city96/ComfyUI-GGUF
 RUN git clone https://github.com/kijai/ComfyUI-KJNodes.git
--------------------------------------------------
 
 WORKDIR /app
 COPY . .
