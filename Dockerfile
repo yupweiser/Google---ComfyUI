@@ -3,15 +3,21 @@ FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies
+# Install system dependencies (including google-cloud-sdk/gcloud storage tools if needed, or rely on base image)
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     git \
+    curl \
     ffmpeg \
     libgl1 \
     libglib2.0-0 \
  && rm -rf /var/lib/apt/lists/*
+
+# Install Google Cloud SDK for 'gcloud storage' commands
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
+ && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - \
+ && apt-get update && apt-get install -y google-cloud-cli
 
 WORKDIR /app
 
@@ -27,20 +33,12 @@ RUN pip3 install --extra-index-url https://download.pytorch.org/whl/cu124 \
 # Install remaining requirements
 RUN pip3 install -r requirements.txt
 
-# Copy the rest of your ComfyUI application code
+# Copy the rest of your ComfyUI application code and entrypoint script
 COPY . .
-
-# Clone required custom nodes so they are baked into the container
-WORKDIR /app/custom_nodes
-RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git ./ComfyUI-Manager
-RUN git clone https://github.com/Kosinkadink/ComfyUI-GGUF.git ./ComfyUI-GGUF
-RUN git clone https://github.com/kijai/ComfyUI-KJNodes.git ./ComfyUI-KJNodes
-
-# Return to root app directory
-WORKDIR /app
+RUN chmod +x /app/entrypoint.sh
 
 # Cloud Run passes the port via the PORT environment variable
 EXPOSE 8080
 
-# Run ComfyUI listening on all interfaces and the designated port
-CMD ["sh", "-c", "python3 main.py --listen 0.0.0.0 --port ${PORT:-8080}"]
+# Use entrypoint script to sync bucket nodes and launch
+ENTRYPOINT ["/app/entrypoint.sh"]
