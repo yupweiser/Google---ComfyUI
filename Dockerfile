@@ -3,42 +3,46 @@ FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies (including google-cloud-sdk/gcloud storage tools if needed, or rely on base image)
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
     git \
     curl \
+    unzip \
     ffmpeg \
     libgl1 \
     libglib2.0-0 \
  && rm -rf /var/lib/apt/lists/*
 
-# Install Google Cloud SDK for 'gcloud storage' commands
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
- && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg add - \
- && apt-get update && apt-get install -y google-cloud-cli
-
 WORKDIR /app
 
-# Copy requirements first to leverage Docker layer caching
 COPY requirements.txt .
-
 RUN python3 -m pip install --upgrade pip
 
-# Install PyTorch with CUDA 12.4 support
 RUN pip3 install --extra-index-url https://download.pytorch.org/whl/cu124 \
     torch torchvision torchaudio
 
-# Install remaining requirements
 RUN pip3 install -r requirements.txt
 
-# Copy the rest of your ComfyUI application code and entrypoint script
-COPY . .
-RUN chmod +x /app/entrypoint.sh
+# --- 1. INSTALL COMFYUI MANAGER VIA PIP AS REQUESTED BY THE ERROR ---
+RUN pip3 install -U --pre comfyui-manager
 
-# Cloud Run passes the port via the PORT environment variable
+# --- 2. BAKE CUSTOM NODES DIRECTLY INTO THE IMAGE ---
+WORKDIR /app/custom_nodes
+
+# Download and extract ComfyUI-GGUF
+RUN curl -sL https://github.com/Kosinkadink/ComfyUI-GGUF/archive/refs/heads/main.zip -o gguf.zip && \
+    unzip gguf.zip && mv ComfyUI-GGUF-main ComfyUI-GGUF && rm gguf.zip
+
+# Download and extract ComfyUI-KJNodes
+RUN curl -sL https://github.com/kijai/ComfyUI-KJNodes/archive/refs/heads/main.zip -o kjnodes.zip && \
+    unzip kjnodes.zip && mv ComfyUI-KJNodes-main ComfyUI-KJNodes && rm kjnodes.zip
+# --------------------------------------------------------------------
+
+WORKDIR /app
+COPY . .
+
 EXPOSE 8080
 
-# Use entrypoint script to sync bucket nodes and launch
-ENTRYPOINT ["/app/entrypoint.sh"]
+# --- 3. START COMFYUI WITH THE --enable-manager FLAG ---
+CMD python3 main.py --listen 0.0.0.0 --port ${PORT:-8080} --enable-manager
