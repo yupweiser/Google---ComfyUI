@@ -35,7 +35,7 @@ RUN git clone https://github.com/kijai/ComfyUI-KJNodes.git
 # --- CREATE MANAGER CONFIG DIRECTORY & FILE ---
 WORKDIR /app
 RUN mkdir -p /app/user/default/__manager && \
-    echo -e "[default]\nsecurity_level = weak\nnetwork_mode = personal_cloud" > /app/user/default/_manager/config.ini
+    echo -e "[default]\nsecurity_level = weak\nnetwork_mode = personal_cloud" > /app/user/default/__manager/config.ini
 
 COPY . .
 
