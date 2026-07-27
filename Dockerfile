@@ -30,6 +30,15 @@ RUN pip3 install -r requirements.txt
 # Copy the rest of your ComfyUI application code
 COPY . .
 
+# Clone required custom nodes so they are baked into the container
+WORKDIR /app/custom_nodes
+RUN git clone https://github.com/ltdrdata/ComfyUI-Manager.git \
+ && git clone https://github.com/Kosinkadink/ComfyUI-GGUF.git \
+ && git clone https://github.com/kijai/ComfyUI-KJNodes.git
+
+# Return to root app directory
+WORKDIR /app
+
 # Cloud Run passes the port via the PORT environment variable
 EXPOSE 8080
 
