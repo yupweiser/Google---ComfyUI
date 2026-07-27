@@ -29,13 +29,17 @@ RUN pip3 install -U --pre comfyui-manager
 
 # --- BAKE CUSTOM NODES DIRECTLY VIA GIT CLONE ---
 WORKDIR /app/custom_nodes
-
 RUN git clone https://github.com/city96/ComfyUI-GGUF
 RUN git clone https://github.com/kijai/ComfyUI-KJNodes.git
 
+# --- CREATE MANAGER CONFIG DIRECTORY & FILE ---
 WORKDIR /app
+RUN mkdir -p /app/user/default/_manager && \
+    echo -e "[default]\nsecurity_level = weak\nnetwork_mode = personal_cloud" > /app/user/default/_manager/config.ini
+
 COPY . .
 
 EXPOSE 8080
 
-CMD python3 main.py --listen 0.0.0.0 --port ${PORT:-8080} --enable-manager --security-level weak
+# Clean startup command without unrecognized flags
+CMD python3 main.py --listen 0.0.0.0 --port ${PORT:-8080} --enable-manager
