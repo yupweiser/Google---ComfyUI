@@ -42,4 +42,4 @@ COPY . .
 EXPOSE 8080
 
 # Clean startup command without unrecognized flags
-CMD python3 main.py --listen 0.0.0.0 --port ${PORT:-8080} --enable-manager
+CMD python3 main.py --listen 0.0.0.0 --port ${PORT:-8080} --enable-manager --enable-manager-legacy-ui
