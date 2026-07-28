@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# --- CLONE COMFYUI CORE ---
+RUN git clone https://github.com/comfy-org/comfyui.git .
+
 COPY requirements.txt .
 RUN python3 -m pip install --upgrade pip
 
@@ -31,9 +34,6 @@ RUN pip3 install -r requirements.txt
 # --- INSTALL COMFYUI MANAGER VIA PIP ---
 RUN pip3 install -U --pre comfyui-manager
 
-# --- CLONE COMFYUI CORE ---
-WORKDIR /app
-RUN git clone https://github.com/comfy-org/comfyui.git .
 
 # --- BAKE CUSTOM NODES DIRECTLY VIA GIT CLONE ---
 WORKDIR /app/custom_nodes
