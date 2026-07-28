@@ -31,6 +31,10 @@ RUN pip3 install -r requirements.txt
 # --- INSTALL COMFYUI MANAGER VIA PIP ---
 RUN pip3 install -U --pre comfyui-manager
 
+# --- CLONE COMFYUI CORE ---
+WORKDIR /app
+RUN git clone https://github.com/comfy-org/comfyui.git .
+
 # --- BAKE CUSTOM NODES DIRECTLY VIA GIT CLONE ---
 WORKDIR /app/custom_nodes
 RUN git clone https://github.com/city96/ComfyUI-GGUF
