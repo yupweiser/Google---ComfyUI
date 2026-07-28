@@ -3,6 +3,7 @@ FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
+# 1. Added nginx, ttyd, and procps to your dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
     python3-pip \
@@ -12,6 +13,9 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     libgl1 \
     libglib2.0-0 \
+    nginx \
+    ttyd \
+    procps \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -32,14 +36,16 @@ WORKDIR /app/custom_nodes
 RUN git clone https://github.com/city96/ComfyUI-GGUF
 RUN git clone https://github.com/kijai/ComfyUI-KJNodes.git
 
-# --- CREATE MANAGER CONFIG DIRECTORY & FILE ---
+# Go back to root app directory
 WORKDIR /app
-RUN mkdir -p /app/user/__manager && \
-    echo -e "[default]\nsecurity_level = weak\nnetwork_mode = personal_cloud" > /app/user/__manager/config.ini
 
-COPY . .
+# 2. Copy your Nginx config and startup script into the container
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
 
+# Cloud Run strictly uses port 8080 for the entrypoint web server (Nginx)
 EXPOSE 8080
 
-# Clean startup command without unrecognized flags
-CMD python3 main.py --listen 0.0.0.0 --port ${PORT:-8080} --enable-manager --enable-manager-legacy-ui
+# 3. Hand over execution to the startup script
+CMD ["/start.sh"]
