@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+FROM nvidia/cuda:13.3.0-runtime-ubuntu22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
@@ -26,7 +26,7 @@ RUN git clone https://github.com/comfy-org/comfyui.git .
 COPY requirements.txt .
 RUN python3 -m pip install --upgrade pip
 
-RUN pip3 install --extra-index-url https://download.pytorch.org/whl/cu124 \
+RUN pip3 install --extra-index-url https://download.pytorch.org/whl/cu130 \
     torch torchvision torchaudio
 
 RUN pip3 install -r requirements.txt
@@ -37,8 +37,6 @@ RUN pip3 install -U --pre comfyui-manager
 
 # --- BAKE CUSTOM NODES DIRECTLY VIA GIT CLONE ---
 WORKDIR /app/custom_nodes
-RUN git clone https://github.com/city96/ComfyUI-GGUF
-RUN git clone https://github.com/kijai/ComfyUI-KJNodes.git
 
 # Go back to root app directory
 WORKDIR /app
